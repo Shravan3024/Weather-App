@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Weather Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Enable Tailwind dark mode via class
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <style>
+    /* Smooth transition for background and text */
+    body, #appBody {
+      transition: background 0.7s ease, color 0.7s ease;
+    }
+  </style>
+</head>
+<body id="appBody" class="flex items-center justify-center min-h-screen transition-all duration-700
+  bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700
+  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
+  text-white dark:text-gray-200">
+
+  <div class="bg-white/20 dark:bg-gray-800/30 backdrop-blur-xl p-6 rounded-3xl shadow-2xl w-full max-w-5xl text-center transition-all duration-700">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl sm:text-4xl font-bold drop-shadow-lg">🌍 Dynamic Weather Dashboard</h1>
+      <!-- Dark Mode Toggle -->
+      <button id="themeToggle" class="bg-white/30 dark:bg-gray-700 px-4 py-2 rounded-2xl shadow-md font-medium transition-all duration-500">
+        🌙 Dark Mode
+      </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex flex-col sm:flex-row gap-2 mb-6">
+      <input id="cityInput" type="text" placeholder="Enter a city or village" 
+        class="flex-1 px-4 py-3 rounded-2xl border focus:outline-none text-black dark:text-gray-200 shadow-inner transition-all duration-500">
+      <div class="flex gap-2">
+        <button onclick="getWeatherByCity()" 
+          class="bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-700 dark:to-purple-900 hover:opacity-90 text-white px-4 py-2 rounded-2xl shadow-md transition-all duration-500">Search</button>
+        <button onclick="getWeatherByLocation()" 
+          class="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-700 dark:to-emerald-900 hover:opacity-90 text-white px-4 py-2 rounded-2xl shadow-md transition-all duration-500">📍</button>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorBox" class="hidden bg-red-600/80 dark:bg-red-700/80 p-3 rounded-2xl mb-4 text-white font-medium transition-all duration-500"></div>
+
+    <!-- Loader -->
+    <div id="loader" class="hidden text-xl animate-pulse">⏳ Loading weather...</div>
+
+    <!-- Current Weather -->
+    <div id="weatherResult" class="hidden mt-6">
+      <h2 class="text-2xl font-semibold" id="cityName"></h2>
+      <img id="icon" class="mx-auto my-4 w-24 drop-shadow-lg">
+      <p class="text-4xl font-bold mb-2" id="temperature"></p>
+      <p class="text-lg italic mb-6" id="condition"></p>
+
+      <!-- Weather Stats in Card Form -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500">
+          <h3 class="font-bold text-lg">🌡️ Feels Like</h3>
+          <p class="text-2xl font-semibold" id="feels"></p>
+          <p class="text-sm opacity-80">Perceived temperature</p>
+        </div>
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500">
+          <h3 class="font-bold text-lg">💧 Humidity</h3>
+          <p class="text-2xl font-semibold" id="humidity"></p>
+          <p class="text-sm opacity-80">Moisture in the air</p>
+        </div>
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500">
+          <h3 class="font-bold text-lg">💨 Wind Speed</h3>
+          <p class="text-2xl font-semibold" id="wind"></p>
+          <p class="text-sm opacity-80">Current wind velocity</p>
+        </div>
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500">
+          <h3 class="font-bold text-lg">☀️ UV Index</h3>
+          <p class="text-2xl font-semibold" id="uv"></p>
+          <p class="text-sm opacity-80">Sun’s intensity</p>
+        </div>
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500">
+          <h3 class="font-bold text-lg">🌅 Sunrise</h3>
+          <p class="text-2xl font-semibold" id="sunrise"></p>
+          <p class="text-sm opacity-80">Morning light begins</p>
+        </div>
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500">
+          <h3 class="font-bold text-lg">🌇 Sunset</h3>
+          <p class="text-2xl font-semibold" id="sunset"></p>
+          <p class="text-sm opacity-80">Evening darkness falls</p>
+        </div>
+        <div class="bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center col-span-1 sm:col-span-2 lg:col-span-3 transition-all duration-500">
+          <h3 class="font-bold text-lg">🌍 Air Quality</h3>
+          <p class="text-2xl font-semibold" id="aqi"></p>
+          <p class="text-sm opacity-80">EPA Standard Air Quality Index</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hourly Forecast -->
+    <div id="hourlyForecast" class="hidden mt-10">
+      <h2 class="text-2xl font-bold mb-4">🕒 Hourly Forecast</h2>
+      <div id="hourlyCards" class="flex gap-4 overflow-x-auto pb-2"></div>
+    </div>
+
+    <!-- 3-Day Forecast -->
+    <div id="forecast" class="hidden mt-10">
+      <h2 class="text-2xl font-bold mb-4">📅 3-Day Forecast</h2>
+      <div id="forecastCards" class="grid grid-cols-1 sm:grid-cols-3 gap-6"></div>
+    </div>
+  </div>
+
+  <script>
+    // IMPORTANT: API key is stored securely on the backend
+    // This frontend communicates with the backend proxy endpoint
+    // See README.md for setup instructions
+
+    // Dark/Light toggle
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      const btn = document.getElementById("themeToggle");
+      btn.textContent = document.documentElement.classList.contains("dark") ? "☀️ Light Mode" : "🌙 Dark Mode";
+    });
+
+    // --- Weather functions ---
+    async function fetchWeather(query) {
+      try {
+        toggleLoader(true);
+        hideError();
+
+        // Call Netlify Function endpoint (API key protected on server)
+        const apiUrl = `/api/weather?q=${encodeURIComponent(query)}&days=3&aqi=yes`;
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("Location not found");
+        const data = await response.json();
+
+        // Current Weather
+        document.getElementById("cityName").textContent = `${data.location.name}, ${data.location.country}`;
+        document.getElementById("temperature").textContent = `${data.current.temp_c}°C`;
+        document.getElementById("condition").textContent = data.current.condition.text;
+        document.getElementById("icon").src = `https:${data.current.condition.icon}`;
+        document.getElementById("feels").textContent = `${data.current.feelslike_c}°C`;
+        document.getElementById("humidity").textContent = `${data.current.humidity}%`;
+        document.getElementById("wind").textContent = `${data.current.wind_kph} kph`;
+        document.getElementById("uv").textContent = data.current.uv;
+        document.getElementById("sunrise").textContent = data.forecast.forecastday[0].astro.sunrise;
+        document.getElementById("sunset").textContent = data.forecast.forecastday[0].astro.sunset;
+
+        // Air Quality
+        const aqi = data.current.air_quality["us-epa-index"];
+        const aqiLevels = ["Good", "Moderate", "Unhealthy (Sensitive)", "Unhealthy", "Very Unhealthy", "Hazardous"];
+        document.getElementById("aqi").textContent = aqiLevels[aqi - 1] || "N/A";
+
+        document.getElementById("weatherResult").classList.remove("hidden");
+        renderHourly(data.forecast.forecastday[0].hour);
+        renderForecast(data.forecast.forecastday);
+
+      } catch (error) {
+        showError("⚠️ " + error.message + " — Try another city");
+      } finally {
+        toggleLoader(false);
+      }
+    }
+
+    function renderForecast(days) {
+      const forecastContainer = document.getElementById("forecastCards");
+      forecastContainer.innerHTML = "";
+      days.forEach(day => {
+        const card = document.createElement("div");
+        card.className = "bg-white/30 dark:bg-gray-700 p-5 rounded-2xl shadow-lg text-center transition-all duration-500";
+        card.innerHTML = `
+          <h3 class="text-lg font-semibold">${new Date(day.date).toLocaleDateString("en-US",{ weekday:"long" })}</h3>
+          <img src="https:${day.day.condition.icon}" class="mx-auto w-16 my-2">
+          <p class="capitalize mb-2">${day.day.condition.text}</p>
+          <p class="font-medium">🌡️ Avg: ${day.day.avgtemp_c}°C</p>
+          <p>⬆ Max: ${day.day.maxtemp_c}°C | ⬇ Min: ${day.day.mintemp_c}°C</p>
+        `;
+        forecastContainer.appendChild(card);
+      });
+      document.getElementById("forecast").classList.remove("hidden");
+    }
+
+    function renderHourly(hours) {
+      const hourlyContainer = document.getElementById("hourlyCards");
+      hourlyContainer.innerHTML = "";
+      const next12 = hours.filter(h => new Date(h.time) > new Date()).slice(0, 12);
+      next12.forEach(hour => {
+        const card = document.createElement("div");
+        card.className = "bg-white/30 dark:bg-gray-700 p-4 rounded-xl shadow text-center min-w-[120px] transition-all duration-500";
+        const time = new Date(hour.time).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+        card.innerHTML = `
+          <h4 class="font-medium">${time}</h4>
+          <img src="https:${hour.condition.icon}" class="mx-auto w-12 my-2">
+          <p class="text-lg font-semibold">${hour.temp_c}°C</p>
+        `;
+        hourlyContainer.appendChild(card);
+      });
+      document.getElementById("hourlyForecast").classList.remove("hidden");
+    }
+
+    function getWeatherByCity() {
+      const city = document.getElementById("cityInput").value;
+      if(!city) return showError("Please enter a city name");
+      fetchWeather(city);
+    }
+
+    function getWeatherByLocation() {
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(pos=>{
+          const {latitude, longitude} = pos.coords;
+          fetchWeather(`${latitude},${longitude}`);
+        }, ()=>showError("Location access denied"));
+      } else showError("Geolocation not supported");
+    }
+
+    function toggleLoader(show){document.getElementById("loader").classList.toggle("hidden", !show);}
+    function showError(msg){const box=document.getElementById("errorBox"); box.textContent=msg; box.classList.remove("hidden");}
+    function hideError(){document.getElementById("errorBox").classList.add("hidden");}
+
+  </script>
+</body>
+</html>
