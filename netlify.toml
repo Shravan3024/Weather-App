@@ -1,0 +1,16 @@
+# Netlify Configuration
+[build]
+  # The directory to publish (the Weather.html file location)
+  publish = "."
+  # Command to run during build (optional)
+  command = "echo 'Building Weather App...'"
+
+# Route API requests to serverless function
+[[redirects]]
+  from = "/api/weather"
+  to = "/.netlify/functions/weather"
+  status = 200
+
+# Configure functions
+[functions]
+  node_bundler = "esbuild"

@@ -130,8 +130,9 @@
         toggleLoader(true);
         hideError();
 
-        // Call backend proxy endpoint (API key protected on server)
-        const response = await fetch(`/api/weather?q=${encodeURIComponent(query)}&days=3&aqi=yes`);
+        // Call Netlify Function endpoint (API key protected on server)
+        const apiUrl = `/api/weather?q=${encodeURIComponent(query)}&days=3&aqi=yes`;
+        const response = await fetch(apiUrl);
         if (!response.ok) throw new Error("Location not found");
         const data = await response.json();
 
