@@ -11,6 +11,12 @@
   to = "/.netlify/functions/weather"
   status = 200
 
+[[redirects]]
+  # Serve the single-page app at Weather.html for all non-API routes
+  from = "/*"
+  to = "/Weather.html"
+  status = 200
+
 # Configure functions
 [functions]
   node_bundler = "esbuild"
