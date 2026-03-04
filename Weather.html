@@ -113,9 +113,9 @@
   </div>
 
   <script>
-    // IMPORTANT: API key should be stored securely on backend or in environment variables
-    // Never commit API keys to version control
-    const apiKey = process.env.WEATHER_API_KEY || "YOUR_API_KEY_HERE";
+    // IMPORTANT: API key is stored securely on the backend
+    // This frontend communicates with the backend proxy endpoint
+    // See README.md for setup instructions
 
     // Dark/Light toggle
     document.getElementById("themeToggle").addEventListener("click", () => {
@@ -130,7 +130,8 @@
         toggleLoader(true);
         hideError();
 
-        const response = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${encodeURIComponent(query)}&days=3&aqi=yes&alerts=yes`);
+        // Call backend proxy endpoint (API key protected on server)
+        const response = await fetch(`/api/weather?q=${encodeURIComponent(query)}&days=3&aqi=yes`);
         if (!response.ok) throw new Error("Location not found");
         const data = await response.json();
 
