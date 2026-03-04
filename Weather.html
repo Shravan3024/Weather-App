@@ -113,7 +113,9 @@
   </div>
 
   <script>
-    const apiKey = "YOUR_API_KEY_HERE"; // original key
+    // IMPORTANT: API key should be stored securely on backend or in environment variables
+    // Never commit API keys to version control
+    const apiKey = process.env.WEATHER_API_KEY || "YOUR_API_KEY_HERE";
 
     // Dark/Light toggle
     document.getElementById("themeToggle").addEventListener("click", () => {
